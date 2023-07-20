@@ -1,3 +1,5 @@
+import * as Tabs from '@radix-ui/react-tabs'
+
 import { CreateTodoForm } from '@/client/components/CreateTodoForm'
 import { TodoList } from '@/client/components/TodoList'
 
@@ -23,10 +25,37 @@ const Index = () => {
         <h1 className="text-center text-4xl font-extrabold text-gray-900">
           Todo App
         </h1>
-
-        <div className="pt-10">
-          <TodoList />
-        </div>
+        <Tabs.Root defaultValue="All">
+          <Tabs.List className="my-10">
+            <Tabs.Trigger
+              className=" m-1 rounded-[9999px] border border-gray-200 px-6 py-3 text-sm font-bold text-gray-700 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+              value="All"
+            >
+              All
+            </Tabs.Trigger>
+            <Tabs.Trigger
+              className=" m-1 rounded-[9999px] border border-gray-200 px-6 py-3 text-sm font-bold text-gray-700 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+              value="Pending"
+            >
+              Pending
+            </Tabs.Trigger>
+            <Tabs.Trigger
+              className=" m-1 rounded-[9999px] border border-gray-200 px-6 py-3 text-sm font-bold text-gray-700 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+              value="Completed"
+            >
+              Completed
+            </Tabs.Trigger>
+          </Tabs.List>
+          <Tabs.Content value="All">
+            <TodoList renderKey="All" />
+          </Tabs.Content>
+          <Tabs.Content value="Pending">
+            <TodoList renderKey="Pending" />
+          </Tabs.Content>
+          <Tabs.Content value="Completed">
+            <TodoList renderKey="Completed" />
+          </Tabs.Content>
+        </Tabs.Root>
 
         <div className="pt-10">
           <CreateTodoForm />

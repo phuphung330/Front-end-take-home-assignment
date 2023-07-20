@@ -1,6 +1,7 @@
 import type { SVGProps } from 'react'
 
 import * as Checkbox from '@radix-ui/react-checkbox'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 
 import { api } from '@/utils/client/api'
 
@@ -63,31 +64,162 @@ import { api } from '@/utils/client/api'
  *  - https://auto-animate.formkit.com
  */
 
-export const TodoList = () => {
+interface todoListProps {
+  renderKey: string
+}
+export const TodoList = ({ renderKey }: todoListProps) => {
+  const apiContext = api.useContext()
+  const [parent] = useAutoAnimate()
+
   const { data: todos = [] } = api.todo.getAll.useQuery({
     statuses: ['completed', 'pending'],
   })
 
-  return (
-    <ul className="grid grid-cols-1 gap-y-3">
-      {todos.map((todo) => (
-        <li key={todo.id}>
-          <div className="flex items-center rounded-12 border border-gray-200 px-4 py-3 shadow-sm">
-            <Checkbox.Root
-              id={String(todo.id)}
-              className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
-            >
-              <Checkbox.Indicator>
-                <CheckIcon className="h-4 w-4 text-white" />
-              </Checkbox.Indicator>
-            </Checkbox.Root>
+  const { mutate: updateTodo } = api.todoStatus.update.useMutation({
+    onSuccess: () => {
+      apiContext.todo.getAll.refetch()
+    },
+  })
 
-            <label className="block pl-3 font-medium" htmlFor={String(todo.id)}>
-              {todo.body}
-            </label>
-          </div>
-        </li>
-      ))}
+  const { mutate: deleteTodo } = api.todo.delete.useMutation({
+    onSuccess: () => {
+      apiContext.todo.getAll.refetch()
+    },
+  })
+
+  const handleCheckChange = (id: number) => {
+    const todo = todos.find((todo) => todo.id === id)
+    if (todo) {
+      const newStatus = todo.status === 'completed' ? 'pending' : 'completed'
+      updateTodo({ todoId: id, status: newStatus as 'completed' | 'pending' })
+    }
+  }
+
+  const handleDeleteTodo = (id: number) => {
+    const todo = todos.find((todo) => todo.id === id)
+    if (todo) {
+      deleteTodo({ id: id })
+    }
+  }
+
+  return (
+    <ul ref={parent} className="grid grid-cols-1 gap-y-3">
+      {/* All todo */}
+      {todos.map(
+        (todo) =>
+          renderKey === 'All' && (
+            <li key={todo.id}>
+              <div
+                className={`${
+                  todo.status === 'completed'
+                    ? 'bg-gray-50 text-gray-500 line-through'
+                    : ''
+                } flex items-center justify-between rounded-12 border border-gray-200 px-4 py-3 shadow-sm`}
+              >
+                <div className="flex">
+                  <Checkbox.Root
+                    onCheckedChange={() => handleCheckChange(todo.id)}
+                    checked={todo.status === 'completed'}
+                    id={String(todo.id)}
+                    className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+                  >
+                    <Checkbox.Indicator>
+                      <CheckIcon className="h-4 w-4 text-white" />
+                    </Checkbox.Indicator>
+                  </Checkbox.Root>
+                  <label
+                    className="block pl-3 font-medium"
+                    htmlFor={String(todo.id)}
+                  >
+                    {todo.body}
+                  </label>
+                </div>
+
+                <XMarkIcon
+                  onClick={() => handleDeleteTodo(todo.id)}
+                  className="h-6 w-6 cursor-pointer rounded-full transition delay-100 ease-in-out hover:scale-110 hover:bg-gray-700 hover:text-white"
+                />
+              </div>
+            </li>
+          )
+      )}
+
+      {/* Pending todo */}
+
+      {todos.map(
+        (todo) =>
+          renderKey === 'Pending' &&
+          todo.status !== 'completed' && (
+            <li key={todo.id}>
+              <div className="flex items-center justify-between rounded-12 border border-gray-200 px-4 py-3 shadow-sm">
+                <div className="flex">
+                  <Checkbox.Root
+                    onCheckedChange={() => handleCheckChange(todo.id)}
+                    checked={false}
+                    id={String(todo.id)}
+                    className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+                  >
+                    <Checkbox.Indicator>
+                      <CheckIcon className="h-4 w-4 text-white" />
+                    </Checkbox.Indicator>
+                  </Checkbox.Root>
+                  <label
+                    className="block pl-3 font-medium"
+                    htmlFor={String(todo.id)}
+                  >
+                    {todo.body}
+                  </label>
+                </div>
+
+                <XMarkIcon
+                  onClick={() => handleDeleteTodo(todo.id)}
+                  className="h-6 w-6 cursor-pointer rounded-full transition delay-100 ease-in-out hover:scale-110 hover:bg-gray-700 hover:text-white"
+                />
+              </div>
+            </li>
+          )
+      )}
+
+      {/* Completed Todo */}
+      {todos.map(
+        (todo) =>
+          renderKey === 'Completed' &&
+          todo.status === 'completed' && (
+            <li key={todo.id}>
+              <div
+                className={`${
+                  todo.status === 'completed'
+                    ? 'bg-gray-50 text-gray-500 line-through'
+                    : ''
+                } flex items-center justify-between rounded-12 border border-gray-200 px-4 py-3 shadow-sm`}
+              >
+                <div className="flex">
+                  <Checkbox.Root
+                    onCheckedChange={() => handleCheckChange(todo.id)}
+                    checked={todo.status === 'completed'}
+                    id={String(todo.id)}
+                    className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+                  >
+                    <Checkbox.Indicator>
+                      <CheckIcon className="h-4 w-4 text-white" />
+                    </Checkbox.Indicator>
+                  </Checkbox.Root>
+                  <label
+                    className="block pl-3 font-medium"
+                    htmlFor={String(todo.id)}
+                  >
+                    {todo.body}
+                  </label>
+                </div>
+
+                <XMarkIcon
+                  onClick={() => handleDeleteTodo(todo.id)}
+                  className="h-6 w-6 cursor-pointer rounded-full transition delay-100 ease-in-out hover:scale-110 hover:bg-gray-700 hover:text-white"
+                />
+              </div>
+            </li>
+          )
+      )}
     </ul>
   )
 }
